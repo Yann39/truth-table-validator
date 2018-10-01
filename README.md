@@ -16,20 +16,20 @@ See below for input format.
 
 ### Combinatorial logic circuit
 
-The program only consider combinatorial circuit composed of **NAND** logical gates.
+The program only consider combinatorial circuits composed of **NAND** logical gates.
 
 Example :
 
 ![Combinatorial circuit example](doc/circuit1.png?raw=true "Combinatorial circuit example")
 
-## Input format
+## Circuit representation
 
 We call **node** any input of the circuit and any logic gate output.
 The nodes are numbered beginning with the entries and ending with the exit of the circuit.
 A circuit can then be represented by a sequence of integers including the number of entries,
 the number of logical gates, and the numbers (identifiers) representing the two input and output of each door.
 
-The example circuit above would be represented as follow :
+So the example circuit above would be represented as follow :
 
 ```bash
 2,4,1,2,3,1,3,4,2,3,5,4,5,6
@@ -47,9 +47,12 @@ As an other example, the following input string :
 3,5,1,2,3,1,3,4,2,3,5,4,5,6,7,5,8
 ```
 
-represents the following circuit :
+would represents the following circuit :
 
 ![Combinatorial circuit example](doc/circuit2.png?raw=true "Combinatorial circuit example")
+
+Note that we could have entered the gate nodes (groups of 3 identifiers) in any order, for example `3,5,4,5,6,1,3,4,2,3,5,1,2,3,7,6,8`.
+Only the output node must stay in last position.
 
 ## Program
 
@@ -71,6 +74,54 @@ The algorithm is quite simple, and consists of the following steps :
 Here is the program output for the input string `2,4,1,2,3,1,3,4,2,3,5,4,5,6` :
 
 ![Example circuit output](doc/example_output.png?raw=true "Example circuit output")
+
+## Checks
+
+The program checks the user input so it matches the following requirements :
+- does not start with a comma
+- does not end with a comma
+- does not contain 2 commas in a row
+- contain only numbers and commas
+- contain at least 5 numbers
+- contain at least one gate
+- one circuit input has been set
+- the output of a gate is not linked to one of its own inputs
+- 2 gates does not have the same output
+- the circuit output is really an output (not used)
+- all outputs of all gates are used (except last gate)
+- the number of gates indicated corresponds to the number of gates really entered
+- the number of inputs indicated corresponds to the number of inputs really entered
+- each numbers are less than 1000 (to avoid generating too large arrays)
+- each gates has 2 inputs defined
+
+An example error output :
+
+![Example circuit error output](doc/example_error_output.png?raw=true "Example circuit error output")
+
+## Assembly code
+
+One of the requirement was to write a `int evalCircuit (int * circuit, int * entries)` function in **assembly** code (ASM).
+This function accepts as parameter a pointer to the representation in memory of a circuit and a pointer
+to a table of integers that contain values in {0,1}. It returns the circuit output result value.
+
+The function was developed using the **Emu8086** software (for Intel 80x86 processors), and is integrated to the **C** program using the `_asm` instruction.
+
+The program :
+- loads tables (addresses) in the `si` and `di` registers using the `LEA` directive.
+- calculates the size of the table (3 times the number of gates + 2).
+- goes through table 3 by 3, we compare the 2 entries of each door, and we execute a `NAND` operation if the 2 entries are defined (if they are 0 or 1)
+- replaces the new value of the output in the result table in order to be able to calculate the other gates.
+
+To integrate the assembly code into the **C** program, I had to use **32 bits** registers (and not **16 bits** registers as with Emu8086).
+Often we even used **8 bits** registers. It is also necessary to have **32 bit** registers to be able to save the values in a **C** variable of type `int`.
+
+Another change was to replace the `LEA` instruction by `MOV` to load the tables into the `esi` and `edi` registers, because `LEA` is difficult to handle in a C program.
+
+We then had to modify the incrementation of the pointers of the tables as it is necessary,
+with the `MOV` instruction, to increment of 4 bytes the pointer to be able to move correctly through the table (indeed integers
+are coded on 32 bits : 1 byte = 8 bits, 4 bytes = 32 bits). It was therefore necessary to avoid using 16 bits "demi-registers" or 8 bits registers.
+
+The use of procedures has also been compromised, as the `proc` and `endp` directives are not recognized by **Microsoft Visual C++** in inline assembler.
 
 ## Licence
 
