@@ -109,7 +109,7 @@ The function was developed using the **Emu8086** software (for Intel 80x86 proce
 The program :
 - loads tables (addresses) in the `si` and `di` registers using the `LEA` directive.
 - calculates the size of the table (3 times the number of gates + 2).
-- goes through table 3 by 3, we compare the 2 entries of each door, and we execute a `NAND` operation if the 2 entries are defined (if they are 0 or 1)
+- goes through the table 3 by 3, and compares the 2 entries of each door, then we execute a `NAND` operation if the 2 entries are defined (if they are 0 or 1)
 - replaces the new value of the output in the result table in order to be able to calculate the other gates.
 
 To integrate the assembly code into the **C** program, I had to use **32 bits** registers (and not **16 bits** registers as with Emu8086).
@@ -119,9 +119,9 @@ Another change was to replace the `LEA` instruction by `MOV` to load the tables 
 
 We then had to modify the incrementation of the pointers of the tables as it is necessary,
 with the `MOV` instruction, to increment of 4 bytes the pointer to be able to move correctly through the table (indeed integers
-are coded on 32 bits : 1 byte = 8 bits, 4 bytes = 32 bits). It was therefore necessary to avoid using 16 bits "demi-registers" or 8 bits registers.
+are coded on 32 bits : 1 byte = 8 bits, 4 bytes = 32 bits). It was therefore necessary to avoid using 16 bits and 8 bits registers.
 
-The use of procedures has also been compromised, as the `proc` and `endp` directives are not recognized by **Microsoft Visual C++** in inline assembler.
+The use of procedures has also been compromised, as the `proc` and `endp` directives are not supported by **Microsoft Visual C++** in inline assembly code.
 
 ## Licence
 
